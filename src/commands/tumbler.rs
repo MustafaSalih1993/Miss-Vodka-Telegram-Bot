@@ -7,6 +7,7 @@ use teloxide::{prelude::*, requests::RequestWithFile, types::InputFile};
 async fn get_rand_tumb() -> Option<String> {
     let key = env::var("TUMBLER").unwrap();
     let blogs = vec![
+        "just4jk",
         "smoke-and-sexx",
         "dickvonstrangle",
         "daddys-little-sluts69",
