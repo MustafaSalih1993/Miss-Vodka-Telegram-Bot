@@ -84,16 +84,19 @@ pub async fn answer(cx: UpdateWithCx<Message>, command: Command) -> ResponseResu
                 cx.answer_str(data.unwrap()).await?
             }
         }
-        Command::En(s) => {
-            if s.is_empty() {
-                cx.answer_str("add some text Portoguese text to translate!")
-                    .await?
-            } else {
-                let data = get_translate(s, "pt".to_string(), "en".to_string()).await;
-                cx.answer_str(data.unwrap()).await?
-            }
-        }
+        Command::En(s) => handle_en(cx, s).await?,
     };
 
     Ok(())
+}
+
+async fn handle_en(cx: UpdateWithCx<Message>, s: String) -> ResponseResult<Message> {
+    if s.is_empty() {
+        return cx
+            .answer_str("add some text Portoguese text to translate!")
+            .await;
+    } else {
+        let data = get_translate(s, "pt".to_string(), "en".to_string()).await;
+        return cx.answer_str(data.unwrap()).await;
+    }
 }
