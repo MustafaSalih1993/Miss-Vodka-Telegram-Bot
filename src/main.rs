@@ -3,11 +3,33 @@
 
 use teloxide::{dispatching::update_listeners, prelude::*};
 
+use reqwest::StatusCode;
 use std::{convert::Infallible, env, net::SocketAddr};
+use teloxide::utils::command::BotCommand;
 use tokio::sync::mpsc;
 use warp::Filter;
 
-use reqwest::StatusCode;
+#[derive(BotCommand)]
+#[command(rename = "lowercase", description = "These commands are supported:")]
+enum Command {
+    #[command(description = "Pinging")]
+    Ping,
+    #[command(description = "say anything .")]
+    Echo(String),
+    #[command(description = "display this text.")]
+    Help,
+}
+
+#[allow(unreachable_patterns)]
+async fn answer(cx: UpdateWithCx<Message>, command: Command) -> ResponseResult<()> {
+    match command {
+        Command::Help => cx.answer(Command::descriptions()).send().await?,
+        Command::Echo(s) => cx.answer_str(s).await?,
+        Command::Ping => cx.answer_str("Pong!").await?,
+    };
+
+    Ok(())
+}
 
 #[tokio::main]
 async fn main() {
@@ -78,13 +100,15 @@ async fn run() {
     let bot = Bot::from_env();
 
     let cloned_bot = bot.clone();
-    teloxide::repl_with_listener(
-        bot,
-        |message| async move {
-            message.answer_str("pong").await?;
-            ResponseResult::<()>::Ok(())
-        },
-        webhook(cloned_bot).await,
-    )
-    .await;
+    teloxide::commands_repl_with_listener(bot, "Miss_VodkaBot", answer, webhook(cloned_bot).await)
+        .await
+    // teloxide::repl_with_listener(
+    //     bot,
+    //     |message| async move {
+    //         message.answer_str("pong").await?;
+    //         ResponseResult::<()>::Ok(())
+    //     },
+    //     webhook(cloned_bot).await,
+    // )
+    // .await;
 }
