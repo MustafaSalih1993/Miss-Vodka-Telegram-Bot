@@ -30,7 +30,7 @@ pub async fn get_translate(
         return None;
     }
 
-    // let response = res.unwrap();
-    // let resp: Response = serde_json::from_str(response).unwrap();
-    res.unwrap().text().await.ok()
+    let response = res.unwrap().text().await;
+    let resp: Response = serde_json::from_str(response.unwrap().as_str()).unwrap();
+    Some(resp.translatedText)
 }
