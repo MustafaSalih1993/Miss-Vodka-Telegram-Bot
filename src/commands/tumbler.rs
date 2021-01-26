@@ -66,6 +66,10 @@ pub async fn handle_tumbler(cx: UpdateWithCx<Message>) -> ResponseResult<Message
     if photo.is_none() {
         return cx.answer_str("Error Happend").await;
     } else {
+        if photo.clone().unwrap().contains("community_guide") {
+            return cx.answer_str("Error Happend").await;
+        }
+
         if photo.clone().unwrap().ends_with(".gif") {
             return cx
                 .answer_animation(InputFile::Url(photo.unwrap()))
