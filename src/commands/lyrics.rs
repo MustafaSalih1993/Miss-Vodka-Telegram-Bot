@@ -1,8 +1,8 @@
 use serde_json::Value;
 use std::env;
-use teloxide::utils::html;
+use teloxide::{prelude::*, utils::html};
 
-pub async fn get_lyrics(s: String) -> Option<String> {
+async fn get_lyrics(s: String) -> Option<String> {
     // parsing starts here
     if s.is_empty() {
         return Some(String::from("artist or song name required you asshole!"));
@@ -101,4 +101,15 @@ pub async fn get_lyrics(s: String) -> Option<String> {
         html::bold(&html::underline(&track_artist.trim_matches('"'))),
         html::italic(&lyrics.trim_matches('"'))
     ))
+}
+pub async fn handle_lyrics(cx: UpdateWithCx<Message>, s: String) -> ResponseResult<Message> {
+    let lyrics_data = get_lyrics(s).await;
+    if lyrics_data.is_some() {
+        cx.answer(lyrics_data.unwrap())
+            .parse_mode(teloxide::types::ParseMode::HTML)
+            .send()
+            .await
+    } else {
+        cx.answer_str("something wrong, try somthing else").await
+    }
 }

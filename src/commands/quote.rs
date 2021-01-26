@@ -1,4 +1,5 @@
 use serde_json::Value;
+use teloxide::prelude::*;
 use teloxide::utils::html;
 
 pub async fn get_random_quote() -> Option<String> {
@@ -24,4 +25,16 @@ pub async fn get_random_quote() -> Option<String> {
         html::code_block(text),
         html::bold(&html::underline(author))
     ))
+}
+
+pub async fn handle_quote(cx: UpdateWithCx<Message>) -> ResponseResult<Message> {
+    let quote_data = get_random_quote().await;
+    if quote_data.is_none() {
+        cx.answer_str("something wrong, try somthing else").await
+    } else {
+        cx.answer(quote_data.unwrap())
+            .parse_mode(teloxide::types::ParseMode::HTML)
+            .send()
+            .await
+    }
 }

@@ -2,13 +2,16 @@ mod gif;
 mod lyrics;
 mod quote;
 mod translate;
+mod tumbler;
 
-use gif::get_gif;
-use lyrics::get_lyrics;
-use quote::get_random_quote;
+use gif::handle_gif;
+use lyrics::handle_lyrics;
+use quote::handle_quote;
 use teloxide::prelude::*;
-use teloxide::{requests::RequestWithFile, types::InputFile, utils::command::BotCommand};
-use translate::get_translate;
+use teloxide::utils::command::BotCommand;
+use translate::handle_en;
+use translate::handle_pr;
+use tumbler::handle_tumbler;
 
 #[derive(BotCommand)]
 #[command(rename = "lowercase", description = "These commands are supported:")]
@@ -18,11 +21,13 @@ pub enum Command {
     #[command(description = "Tell the bot to say anything you type after /echo")]
     Echo(String),
     #[command(description = "get lyrics of a song, in this format \"artist - song\"")]
+    Lyrics(String),
     #[command(description = "Random Quote")]
     Quote,
-    Lyrics(String),
     #[command(description = "Search a gif photo")]
     Gif(String),
+    #[command(description = "random photo/gif from tumbler")]
+    Tumb,
     #[command(description = "display this text.")]
     Help,
     #[command(description = "translate english to Portoguese")]
@@ -37,66 +42,13 @@ pub async fn answer(cx: UpdateWithCx<Message>, command: Command) -> ResponseResu
         Command::Help => cx.answer(Command::descriptions()).send().await?,
         Command::Echo(s) => cx.answer_str(s).await?,
         Command::Ping => cx.answer_str("Pong!").await?,
-        Command::Gif(s) => {
-            if s.is_empty() {
-                cx.answer_str("Consider Giving The Photo A Name You Fucking Asshole!")
-                    .await?
-            } else {
-                let gif_url = get_gif(s).await;
-                if gif_url.is_none() {
-                    cx.answer_str("Some shit happend, try again!").await?
-                } else {
-                    cx.answer_animation(InputFile::Url(gif_url.unwrap()))
-                        .send()
-                        .await
-                        .unwrap()?
-                }
-            }
-        }
-        Command::Lyrics(s) => {
-            let lyrics_data = get_lyrics(s).await;
-            if lyrics_data.is_some() {
-                cx.answer(lyrics_data.unwrap())
-                    .parse_mode(teloxide::types::ParseMode::HTML)
-                    .send()
-                    .await?
-            } else {
-                cx.answer_str("something wrong, try somthing else").await?
-            }
-        }
-        Command::Quote => {
-            let quote_data = get_random_quote().await;
-            if quote_data.is_none() {
-                cx.answer_str("something wrong, try somthing else").await?
-            } else {
-                cx.answer(quote_data.unwrap())
-                    .parse_mode(teloxide::types::ParseMode::HTML)
-                    .send()
-                    .await?
-            }
-        }
-        Command::Pr(s) => {
-            if s.is_empty() {
-                cx.answer_str("add some text English text to translate!")
-                    .await?
-            } else {
-                let data = get_translate(s, "en".to_string(), "pt".to_string()).await;
-                cx.answer_str(data.unwrap()).await?
-            }
-        }
+        Command::Gif(s) => handle_gif(cx, s).await?,
+        Command::Lyrics(s) => handle_lyrics(cx, s).await?,
+        Command::Quote => handle_quote(cx).await?,
+        Command::Pr(s) => handle_pr(cx, s).await?,
         Command::En(s) => handle_en(cx, s).await?,
+        Command::Tumb => handle_tumbler(cx).await?,
     };
 
     Ok(())
-}
-
-async fn handle_en(cx: UpdateWithCx<Message>, s: String) -> ResponseResult<Message> {
-    if s.is_empty() {
-        return cx
-            .answer_str("add some text Portoguese text to translate!")
-            .await;
-    } else {
-        let data = get_translate(s, "pt".to_string(), "en".to_string()).await;
-        return cx.answer_str(data.unwrap()).await;
-    }
 }

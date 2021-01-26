@@ -1,5 +1,6 @@
 use serde_json::Value;
 use std::env;
+use teloxide::{prelude::*, requests::RequestWithFile, types::InputFile};
 
 pub async fn get_gif(txt: String) -> Option<String> {
     let key = env::var("TENOR_KEY").unwrap();
@@ -25,4 +26,21 @@ pub async fn get_gif(txt: String) -> Option<String> {
     let target = &response["results"][0]["media"][0]["gif"]["url"];
 
     Some(target.to_string().trim_matches('"').to_string())
+}
+
+pub async fn handle_gif(cx: UpdateWithCx<Message>, s: String) -> ResponseResult<Message> {
+    if s.is_empty() {
+        cx.answer_str("Consider Giving The Photo A Name You Fucking Asshole!")
+            .await
+    } else {
+        let gif_url = get_gif(s).await;
+        if gif_url.is_none() {
+            cx.answer_str("Some shit happend, try again!").await
+        } else {
+            cx.answer_animation(InputFile::Url(gif_url.unwrap()))
+                .send()
+                .await
+                .unwrap()
+        }
+    }
 }
