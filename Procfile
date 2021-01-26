@@ -1,1 +1,1 @@
-web: ./target/debug/miss-vodka
+web: ./target/release/miss-vodka
