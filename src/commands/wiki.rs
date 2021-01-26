@@ -66,8 +66,11 @@ async fn get_lwiki(s: String) -> Option<String> {
             _ => x,
         })
         .collect();
+    let url = format!(
+        "https://en.wikipedia.org/w/api.php?action=query&prop=cirrusdoc&titles={}&format=json",
+        s
+    );
 
-    let url = format!("https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch={}&format=json&srlimit=1",s);
     let response = reqwest::get(&url).await.ok()?.text().await.ok();
 
     if response.is_none() {
