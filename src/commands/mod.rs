@@ -1,12 +1,14 @@
 mod gif;
 mod lyrics;
 mod quote;
+mod translate;
 
 use gif::get_gif;
 use lyrics::get_lyrics;
 use quote::get_random_quote;
 use teloxide::prelude::*;
 use teloxide::{requests::RequestWithFile, types::InputFile, utils::command::BotCommand};
+use translate::get_translate;
 
 #[derive(BotCommand)]
 #[command(rename = "lowercase", description = "These commands are supported:")]
@@ -15,7 +17,6 @@ pub enum Command {
     Ping,
     #[command(description = "Tell the bot to say anything you type after /echo")]
     Echo(String),
-    #[command(description = "Misc:")]
     #[command(description = "get lyrics of a song, in this format \"artist - song\"")]
     #[command(description = "Random Quote")]
     Quote,
@@ -24,6 +25,10 @@ pub enum Command {
     Gif(String),
     #[command(description = "display this text.")]
     Help,
+    #[command(description = "translate english to Portoguese")]
+    Pr(String),
+    #[command(description = "translate Portoguese to English")]
+    En(String),
 }
 
 #[allow(unreachable_patterns)]
@@ -68,6 +73,24 @@ pub async fn answer(cx: UpdateWithCx<Message>, command: Command) -> ResponseResu
                     .parse_mode(teloxide::types::ParseMode::HTML)
                     .send()
                     .await?
+            }
+        }
+        Command::Pr(s) => {
+            if s.is_empty() {
+                cx.answer_str("add some text English text to translate!")
+                    .await?
+            } else {
+                let data = get_translate(s, "en".to_string(), "pt".to_string()).await;
+                cx.answer_str(data.unwrap()).await?
+            }
+        }
+        Command::En(s) => {
+            if s.is_empty() {
+                cx.answer_str("add some text Portoguese text to translate!")
+                    .await?
+            } else {
+                let data = get_translate(s, "pt".to_string(), "en".to_string()).await;
+                cx.answer_str(data.unwrap()).await?
             }
         }
     };
