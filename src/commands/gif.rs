@@ -12,13 +12,7 @@ pub async fn get_gif(txt: String) -> Option<String> {
 
     println!("{:?}", txt);
     let url = format!("https://api.tenor.com/v1/random?q={}&key={}&contentfilter=off&limit=1&media_filter=minimal",txt,key);
-    // let response = match minreq::get(url).send() {
-    //     Ok(resp) => match resp.as_str() {
-    //         Ok(s) => s.trim().to_string(),
-    //         _ => "Error".to_string(),
-    //     },
-    //     _ => "Error".to_string(),
-    // };
+
     let response = reqwest::get(&url).await.ok()?.text().await.ok();
 
     let response: Value = match serde_json::from_str(&response.unwrap()) {
