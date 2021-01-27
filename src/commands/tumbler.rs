@@ -16,7 +16,7 @@ async fn get_rand_tumb() -> Option<String> {
     //     "brizar",
     //     "curiouskittenmask",
     // ];
-    let blog = "juancarlsborbon"; //blogs.choose(&mut rand::thread_rng()).unwrap();
+    let blog = "geek-daddys-den"; //blogs.choose(&mut rand::thread_rng()).unwrap();
     let url = format!(
         "https://api.tumblr.com/v2/blog/{}/posts/photo?api_key={}",
         blog, key
