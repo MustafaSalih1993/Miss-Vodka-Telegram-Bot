@@ -1,3 +1,4 @@
+mod common;
 mod gif;
 mod lyrics;
 mod quote;

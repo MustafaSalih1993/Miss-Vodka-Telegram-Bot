@@ -1,6 +1,18 @@
-use serde_json::Value;
+use crate::commands::common::make_request;
 use std::env;
 use teloxide::{prelude::*, utils::html};
+
+pub async fn handle_lyrics(cx: UpdateWithCx<Message>, s: String) -> ResponseResult<Message> {
+    let lyrics_data = get_lyrics(s).await;
+    if lyrics_data.is_some() {
+        cx.answer(lyrics_data.unwrap())
+            .parse_mode(teloxide::types::ParseMode::HTML)
+            .send()
+            .await
+    } else {
+        cx.answer_str("something wrong, try somthing else").await
+    }
+}
 
 async fn get_lyrics(s: String) -> Option<String> {
     // parsing starts here
@@ -44,19 +56,9 @@ async fn get_lyrics(s: String) -> Option<String> {
         "http://api.musixmatch.com/ws/1.1/track.search?q_artist={}&q_track={}&apikey={}",
         artist, song, key
     );
-    let response = reqwest::get(&url)
-        .await
-        .ok()?
-        .text()
-        .await
-        .ok()
-        .unwrap()
-        .trim()
-        .to_string();
-
-    let response: Value = match serde_json::from_str(&response) {
-        Ok(data) => data,
-        _ => return Some(String::from("Shit happend while parsing lyrics")),
+    let response = match make_request(url).await {
+        Some(data) => data,
+        None => return None,
     };
     match response["message"]["body"]["track_list"][0]["track"]["has_lyrics"].as_u64() {
         Some(val) => {
@@ -78,17 +80,12 @@ async fn get_lyrics(s: String) -> Option<String> {
         "http://api.musixmatch.com/ws/1.1/track.lyrics.get?track_id={}&apikey={}",
         track_id, key
     );
-    let response = reqwest::get(&url)
-        .await
-        .ok()?
-        .text()
-        .await
-        .ok()
-        .unwrap()
-        .trim()
-        .to_string();
 
-    let response: Value = serde_json::from_str(&response).unwrap();
+    let response = match make_request(url).await {
+        Some(val) => val,
+        None => return None,
+    };
+
     let lyrics: String = response["message"]["body"]["lyrics"]["lyrics_body"]
         .to_string()
         .replace("\\n", "\n")
@@ -101,15 +98,4 @@ async fn get_lyrics(s: String) -> Option<String> {
         html::bold(&html::underline(&track_artist.trim_matches('"'))),
         html::italic(&lyrics.trim_matches('"'))
     ))
-}
-pub async fn handle_lyrics(cx: UpdateWithCx<Message>, s: String) -> ResponseResult<Message> {
-    let lyrics_data = get_lyrics(s).await;
-    if lyrics_data.is_some() {
-        cx.answer(lyrics_data.unwrap())
-            .parse_mode(teloxide::types::ParseMode::HTML)
-            .send()
-            .await
-    } else {
-        cx.answer_str("something wrong, try somthing else").await
-    }
 }

@@ -1,3 +1,4 @@
+use crate::commands::common::make_request;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use teloxide::{
@@ -10,6 +11,30 @@ use teloxide::{
 struct WikiBody {
     title: String,
     body: String,
+}
+
+pub async fn handle_lwiki(cx: UpdateWithCx<Message>, s: String) -> ResponseResult<Message> {
+    let lwiki_data = get_lwiki(s).await;
+    if lwiki_data.is_none() {
+        cx.answer_str("couldnt find that").await
+    } else {
+        cx.answer(lwiki_data.unwrap())
+            .parse_mode(teloxide::types::ParseMode::HTML)
+            .send()
+            .await
+    }
+}
+
+pub async fn handle_swiki(cx: UpdateWithCx<Message>, s: String) -> ResponseResult<Message> {
+    let swiki_data = get_swiki(s).await;
+    if swiki_data.is_none() {
+        cx.answer_str("couldnt find that").await
+    } else {
+        cx.answer(swiki_data.unwrap())
+            .parse_mode(teloxide::types::ParseMode::HTML)
+            .send()
+            .await
+    }
 }
 
 // swiki for Short wiki
@@ -26,15 +51,11 @@ async fn get_swiki(s: String) -> Option<String> {
         .collect();
 
     let url = format!("https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch={}&format=json&srlimit=1",s);
-    let response = reqwest::get(&url).await.ok()?.text().await.ok();
+    let response: Value = match make_request(url).await {
+        Some(val) => val,
+        None => return None,
+    };
 
-    if response.is_none() {
-        return None;
-    }
-
-    let response = response.unwrap().trim().to_string();
-
-    let response: Value = serde_json::from_str(&response).unwrap();
     let parrsed: String = response["query"]["search"][0]["snippet"]
         .to_string()
         .replace("<span", "<b")
@@ -70,16 +91,11 @@ async fn get_lwiki(s: String) -> Option<String> {
         "https://en.wikipedia.org/w/api.php?action=query&prop=cirrusdoc&titles={}&format=json",
         s
     );
+    let response: Value = match make_request(url).await {
+        Some(val) => val,
+        None => return None,
+    };
 
-    let response = reqwest::get(&url).await.ok()?.text().await.ok();
-
-    if response.is_none() {
-        return None;
-    }
-
-    let response = response.unwrap().trim().to_string();
-
-    let response: Value = serde_json::from_str(&response).unwrap();
     let text = &response["query"]["pages"]
         .as_object()
         .unwrap()
@@ -105,27 +121,4 @@ async fn get_lwiki(s: String) -> Option<String> {
             text.trim_matches('"')
         ));
     };
-}
-pub async fn handle_lwiki(cx: UpdateWithCx<Message>, s: String) -> ResponseResult<Message> {
-    let lwiki_data = get_lwiki(s).await;
-    if lwiki_data.is_none() {
-        cx.answer_str("couldnt find that").await
-    } else {
-        cx.answer(lwiki_data.unwrap())
-            .parse_mode(teloxide::types::ParseMode::HTML)
-            .send()
-            .await
-    }
-}
-
-pub async fn handle_swiki(cx: UpdateWithCx<Message>, s: String) -> ResponseResult<Message> {
-    let swiki_data = get_swiki(s).await;
-    if swiki_data.is_none() {
-        cx.answer_str("couldnt find that").await
-    } else {
-        cx.answer(swiki_data.unwrap())
-            .parse_mode(teloxide::types::ParseMode::HTML)
-            .send()
-            .await
-    }
 }

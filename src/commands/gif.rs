@@ -1,32 +1,6 @@
-use serde_json::Value;
+use crate::commands::common::make_request;
 use std::env;
 use teloxide::{prelude::*, requests::RequestWithFile, types::InputFile};
-
-pub async fn get_gif(txt: String) -> Option<String> {
-    let key = env::var("TENOR_KEY").unwrap();
-    // need somthing better
-    let txt = txt
-        .trim()
-        .split_whitespace()
-        .collect::<Vec<_>>()
-        .join("%20");
-
-    println!("{:?}", txt);
-    let url = format!("https://api.tenor.com/v1/random?q={}&key={}&contentfilter=off&limit=1&media_filter=minimal",txt,key);
-
-    let response = reqwest::get(&url).await.ok()?.text().await.ok();
-
-    let response: Value = match serde_json::from_str(&response.unwrap()) {
-        Ok(val) => val,
-        _ => return None,
-    };
-    if response["results"].as_array().unwrap().is_empty() {
-        return Some(String::from("Not Found, Try Search Somthing Else!"));
-    }
-    let target = &response["results"][0]["media"][0]["gif"]["url"];
-
-    Some(target.to_string().trim_matches('"').to_string())
-}
 
 pub async fn handle_gif(cx: UpdateWithCx<Message>, s: String) -> ResponseResult<Message> {
     if s.is_empty() {
@@ -43,4 +17,29 @@ pub async fn handle_gif(cx: UpdateWithCx<Message>, s: String) -> ResponseResult<
                 .unwrap()
         }
     }
+}
+
+async fn get_gif(txt: String) -> Option<String> {
+    let key = env::var("TENOR_KEY").unwrap();
+    // need somthing better
+    let txt = txt
+        .trim()
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join("%20");
+
+    println!("{:?}", txt);
+    let url = format!("https://api.tenor.com/v1/random?q={}&key={}&contentfilter=off&limit=1&media_filter=minimal",txt,key);
+
+    let response = match make_request(url).await {
+        Some(val) => val,
+        None => return None,
+    };
+
+    if response["results"].as_array().unwrap().is_empty() {
+        return Some(String::from("Not Found, Try Search Somthing Else!"));
+    }
+    let target = &response["results"][0]["media"][0]["gif"]["url"];
+
+    Some(target.to_string().trim_matches('"').to_string())
 }
