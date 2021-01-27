@@ -6,16 +6,16 @@ use teloxide::{prelude::*, requests::RequestWithFile, types::InputFile};
 
 async fn get_rand_tumb() -> Option<String> {
     let key = env::var("TUMBLER").unwrap();
-    // let blogs = vec![
-    //     "just4jk",
-    //     "smoke-and-sexx",
-    //     "dickvonstrangle",
-    //     "daddys-little-sluts69",
-    //     "ivansdirtygirl69",
-    //     "brizar",
-    //     "curiouskittenmask",
-    // ];
-    let blog = "smoke-and-sexx"; //blogs.choose(&mut rand::thread_rng()).unwrap();
+    let blogs = vec![
+        "just4jk",
+        "smoke-and-sexx",
+        "dickvonstrangle",
+        "daddys-little-sluts69",
+        "ivansdirtygirl69",
+        "brizar",
+        "curiouskittenmask",
+    ];
+    let blog = blogs.choose(&mut rand::thread_rng()).unwrap();
     let url = format!(
         "https://api.tumblr.com/v2/blog/{}/posts/photo?api_key={}",
         blog, key
@@ -36,7 +36,7 @@ async fn get_rand_tumb() -> Option<String> {
         _ => return Some(String::from("Error Parsing server response!")),
     };
 
-    let num = rand::thread_rng().gen_range(0..(posts_count - 20) as u32);
+    let num = rand::thread_rng().gen_range(0..(posts_count) as u32);
     let url = format!(
         "https://api.tumblr.com/v2/blog/{}/posts/photo?api_key={}&offset={}",
         blog, key, num
