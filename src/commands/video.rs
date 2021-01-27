@@ -46,6 +46,9 @@ async fn get_video(s: String) -> Option<String> {
 
     let resp: Value = serde_json::from_str(&resp.unwrap()).unwrap();
     let videos = resp.as_object().unwrap()["videos"].as_array().unwrap();
+    if videos.len() < 2 {
+        return None;
+    }
     let video = videos
         .choose(&mut rand::thread_rng())
         .unwrap()
@@ -59,15 +62,6 @@ async fn get_video(s: String) -> Option<String> {
         .unwrap()
         .trim_matches('"')
         .to_string();
-    // let video = videos[0].as_object().unwrap()["video_files"]
-    //     .as_array()
-    //     .unwrap()[0]
-    //     .as_object()
-    //     .unwrap()["link"]
-    //     .as_str()
-    //     .unwrap()
-    //     .trim_matches('"')
-    //     .to_string();
 
     Some(video)
 }
