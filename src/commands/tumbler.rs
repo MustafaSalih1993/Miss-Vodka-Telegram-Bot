@@ -6,17 +6,17 @@ use teloxide::{prelude::*, requests::RequestWithFile, types::InputFile};
 
 async fn get_rand_tumb() -> Option<String> {
     let key = env::var("TUMBLER").unwrap();
-    let blogs = vec![
-        "just4jk",
-        "smoke-and-sexx",
-        "dickvonstrangle",
-        "daddys-little-sluts69",
-        "moan-s",
-        "ivansdirtygirl69",
-        "brizar",
-        "curiouskittenmask",
-    ];
-    let blog = blogs.choose(&mut rand::thread_rng()).unwrap();
+    // let blogs = vec![
+    //     "just4jk",
+    //     "smoke-and-sexx",
+    //     "dickvonstrangle",
+    //     "daddys-little-sluts69",
+    //     "moan-s",
+    //     "ivansdirtygirl69",
+    //     "brizar",
+    //     "curiouskittenmask",
+    // ];
+    let blog = "just4jk"; //blogs.choose(&mut rand::thread_rng()).unwrap();
     let url = format!(
         "https://api.tumblr.com/v2/blog/{}/posts/photo?api_key={}",
         blog, key
@@ -32,7 +32,10 @@ async fn get_rand_tumb() -> Option<String> {
         None => return None,
     };
     let response: Value = serde_json::from_str(&response).unwrap();
-    let posts_count: u64 = response["response"]["total_posts"].as_u64().unwrap();
+    let posts_count: u64 = match response["response"]["total_posts"].as_u64() {
+        Some(val) => val,
+        _ => return Some(String::from("Error Parsing server response!")),
+    };
 
     let num = rand::thread_rng().gen_range(0..(posts_count - 20) as u32);
     let url = format!(
