@@ -4,6 +4,7 @@ mod lyrics;
 mod quote;
 mod translate;
 mod tumbler;
+mod video;
 mod wiki;
 
 use gif::handle_gif;
@@ -14,6 +15,7 @@ use teloxide::utils::command::BotCommand;
 use translate::handle_en;
 use translate::handle_pr;
 use tumbler::handle_tumbler;
+use video::handle_video;
 use wiki::{handle_lwiki, handle_swiki};
 
 #[derive(BotCommand)]
@@ -31,6 +33,8 @@ pub enum Command {
     Gif(String),
     #[command(description = "random photo/gif from tumbler")]
     Tumb,
+    #[command(description = "search and get random video")]
+    Video(String),
     #[command(description = "Search a full wiki")]
     Lwiki(String),
     #[command(description = "Search a short wiki")]
@@ -57,6 +61,7 @@ pub async fn answer(cx: UpdateWithCx<Message>, command: Command) -> ResponseResu
         Command::Tumb => handle_tumbler(cx).await?,
         Command::Lwiki(s) => handle_lwiki(cx, s).await?,
         Command::Swiki(s) => handle_swiki(cx, s).await?,
+        Command::Video(s) => handle_video(cx, s).await?,
     };
 
     Ok(())
