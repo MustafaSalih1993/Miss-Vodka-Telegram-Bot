@@ -1,6 +1,7 @@
 mod common;
 mod gif;
 mod lyrics;
+mod photo;
 mod quote;
 mod translate;
 mod tumbler;
@@ -9,6 +10,7 @@ mod wiki;
 
 use gif::handle_gif;
 use lyrics::handle_lyrics;
+use photo::handle_photo;
 use quote::handle_quote;
 use teloxide::prelude::*;
 use teloxide::utils::command::BotCommand;
@@ -32,6 +34,8 @@ pub enum Command {
     #[command(description = "Search a gif photo")]
     Gif(String),
     #[command(description = "random photo/gif from tumbler")]
+    Photo(String),
+    #[command(description = "random photo by query from unsplash")]
     Tumb,
     #[command(description = "search and get random video")]
     Video(String),
@@ -54,6 +58,7 @@ pub async fn answer(cx: UpdateWithCx<Message>, command: Command) -> ResponseResu
         Command::Echo(s) => cx.answer_str(s).await?,
         Command::Ping => cx.answer_str("Pong!").await?,
         Command::Gif(s) => handle_gif(cx, s).await?,
+        Command::Photo(s) => handle_photo(cx, s).await?,
         Command::Lyrics(s) => handle_lyrics(cx, s).await?,
         Command::Quote => handle_quote(cx).await?,
         Command::Pr(s) => handle_pr(cx, s).await?,
