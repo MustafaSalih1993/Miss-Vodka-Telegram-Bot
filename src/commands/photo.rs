@@ -36,9 +36,10 @@ async fn get_photo(s: String) -> Option<String> {
         None => return None,
     };
 
-    let photo = resp.as_object().unwrap()["urls"].as_object().unwrap()["raw"]
-        .as_str()
-        .unwrap();
+    let photo = match resp.as_object() {
+        Some(x) => x["urls"].as_object().unwrap()["raw"].as_str().unwrap(),
+        _ => return None,
+    };
 
     Some(photo.trim_matches('"').to_string())
 }
