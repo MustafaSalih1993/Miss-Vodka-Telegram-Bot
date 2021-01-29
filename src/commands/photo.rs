@@ -25,6 +25,7 @@ pub async fn handle_photo(cx: UpdateWithCx<Message>, s: String) -> ResponseResul
 }
 
 async fn get_photo(s: String) -> Option<String> {
+    let s = s.trim().replace(" ", "%20");
     let key = env::var("UNSPLASH_KEY").unwrap();
     let url = format!(
         "https://api.unsplash.com/photos/random?client_id={}&query={}",
